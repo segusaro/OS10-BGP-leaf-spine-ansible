@@ -1,0 +1,92 @@
+---
+dellos_system:
+    hostname: leaf3
+
+cli:
+    host: "{{ ansible_host }}"
+  
+dellos_bgp:
+    asn: 64703
+    router_id: 10.0.0.5
+    best_path:
+        as_path: multipath-relax
+    neighbor:
+        - name: leaf-spine
+          type: peergroup
+          fall_over: present
+          adv_interval: 1
+          timer: 3 9
+          connection_retry_timer: 10
+          state: present
+        - type: ipv4
+          ip: 192.168.1.4
+          remote_asn: 64600 
+          peergroup: leaf-spine
+          peergroup_state: present
+          admin: up
+          state: present
+        - type: ipv4
+          ip: 192.168.2.4
+          remote_asn: 64600 
+          peergroup: leaf-spine
+          admin: up
+          state: present
+    redistribute:
+        - route_type: connected
+          state: present
+          address_type: ipv4
+          route_map_name: ACCEPT_DC_LOCAL
+          route_map: present
+
+dellos_interface:
+    loopback 0:
+        desc: "Router ID"
+        ip_and_mask: 10.0.0.5/32
+    ethernet 1/1/53:
+        desc: "spine1"
+        ip_and_mask: 192.168.1.5/31
+        switchport: False
+        admin: up
+    ethernet 1/1/54:
+        desc: "spine2"
+        ip_and_mask: 192.168.2.5/31
+        switchport: False
+        admin: up
+    ethernet 1/1/48:
+        desc: "server2"
+        ip_and_mask: 10.1.2.1/24
+        switchport: False
+        admin: up
+
+dellos_prefixlist:
+   - name: DC_LOCAL_SUBNET
+     type: ipv4
+     description: Redistribute_local_subnet_and_loopbacks
+     entries:
+       - number: 5
+         permit: true
+         net_num: 10.1.0.0
+         mask: 16
+         condition_list:
+           - condition: le
+             prelen: 24
+         state: present
+       - number: 10
+         permit: true
+         net_num: 10.0.0.0
+         mask: 24
+         condition_list:
+           - condition: le
+             prelen: 32
+         state: present
+     state: present
+
+dellos_route_map:
+      route_map:
+        - name:  ACCEPT_DC_LOCAL
+          permit: true
+          seq_num: 10
+          match:
+           - ip_type: ipv4
+             prefix_list: DC_LOCAL_SUBNET
+          state: present

@@ -1,0 +1,12 @@
+---
+- hosts: datacenter
+  connection: local
+  gather_facts : no
+
+  tasks:
+    - name: "Clear all BGP sessions"
+      dellos10_command:
+        commands:
+          - clear ip bgp *
+        provider: "{{ cli }}"
+

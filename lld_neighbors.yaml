@@ -1,0 +1,14 @@
+---
+- hosts: datacenter
+  connection: local
+  gather_facts : no
+
+  tasks:
+    - name: "Show LLDP neighbors"
+      dellos10_command:
+        commands:
+          - show lldp neighbor
+        provider: "{{ cli }}"
+      register: show_lldp
+
+    - debug: var=show_lldp

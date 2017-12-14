@@ -1,0 +1,12 @@
+---
+- hosts: datacenter
+  connection: local
+  gather_facts : no
+
+  tasks:
+    - name: "Save configuration and reload"
+      dellos10_config:
+        commands:
+          - no ip prefix-list DC_LOCAL_SUBNET 
+        provider: "{{ cli }}"
+

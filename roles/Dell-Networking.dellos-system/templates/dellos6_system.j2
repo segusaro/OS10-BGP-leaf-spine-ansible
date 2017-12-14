@@ -1,0 +1,46 @@
+#jinja2: trim_blocks: True,lstrip_blocks: True
+{####################################
+
+Purpose:
+Configure system commands for dellos6 devices
+
+dellos_system:
+    enable_password: force10
+    mtu: 2000
+    sntp:
+      - ip: 2.2.2.2
+        state: absent
+
+#####################################}
+{% if dellos_system is defined and dellos_system %}
+
+{% for key,value in dellos_system.iteritems() %}
+  {% if key == "hostname" %}
+    {% if value %}
+hostname "{{ value }}"
+    {% endif %}
+  {% elif key == "enable_password" %}
+    {% if value  %}
+enable password {{ value }}
+    {% else %}
+no enable password
+    {% endif %}
+  {% elif key== "mtu" %}
+    {% if value %}
+system jumbo mtu {{ value }}
+    {% else %}
+no system jumbo mtu
+    {% endif %}
+  {% elif key == "sntp" %}
+    {% for item in value %}
+      {% if item.ip is defined and item.ip %}
+        {% if item.state is defined and item.state == "absent" %}
+no sntp server {{ item.ip }}
+        {% else %}
+sntp server {{ item.ip }}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endfor %}
+{% endif %}
